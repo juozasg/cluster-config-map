@@ -39,6 +39,11 @@ spec:
                 additionalProperties:
                   type: string
                 type: object
+              generateTo:
+                properties:
+                  labelMatch:
+                    type: string
+                type: object
             type: object
           status:
             description: ClusterConfigMapStatus defines the observed state of ClusterConfigMap

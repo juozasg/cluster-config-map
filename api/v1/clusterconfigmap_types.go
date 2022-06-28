@@ -23,9 +23,15 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+type GenerateToSpec struct {
+	LabelMatch string `json:"labelMatch,omitempty"`
+}
+
 // ClusterConfigMapSpec defines the desired state of ClusterConfigMap
 type ClusterConfigMapSpec struct {
 	Data map[string]string `json:"data,omitempty"`
+
+	GenerateTo GenerateToSpec `json:"generateTo,omitempty"`
 }
 
 // ClusterConfigMapStatus defines the observed state of ClusterConfigMap

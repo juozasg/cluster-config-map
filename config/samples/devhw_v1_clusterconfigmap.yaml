@@ -3,4 +3,5 @@ kind: ClusterConfigMap
 metadata:
   name: clusterconfigmap-sample
 spec:
-  # TODO(user): Add fields here
+  generateTo:
+    labelMatch: 'fnargle'
