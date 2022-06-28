@@ -1,0 +1,6 @@
+domain: github.com
+layout:
+- go.kubebuilder.io/v3
+projectName: cluster-config-map
+repo: github.com/juozasg/cluster-config-map
+version: "3"
