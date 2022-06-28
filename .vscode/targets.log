@@ -6,13 +6,13 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Tue Jun 28 15:52:17 2022
+# Make data base, printed on Tue Jun 28 17:27:58 2022
 
 # Variables
 
+ 
 # automatic
 <D = $(patsubst %/,%,$(dir $<))
- 
 # environment
 RUBY_VERSION = ruby-3.0.0
 # automatic
@@ -72,7 +72,7 @@ GOPATH = /home/juozas/go
 # environment
 VSCODE_LOG_STACK = false
 # environment
-VSCODE_IPC_HOOK_CLI = /tmp/vscode-ipc-eb1c8a49-8163-473a-b2a2-209672c25956.sock
+VSCODE_IPC_HOOK_CLI = /tmp/vscode-ipc-9d0b14a9-2baa-4b1a-b792-b9e6fc794a49.sock
 # environment
 VSCODE_SERVER_TAR = /mnt/c/Users/juozas/AppData/Local/Temp/vscode-remote-wsl/30d9c6cd9483b2cc586687151bcbcd635f373630/vscode-server-stable-linux-x64.tar.gz
 # default
@@ -220,7 +220,7 @@ MY_RUBY_HOME = /home/juozas/.rvm/rubies/ruby-3.0.0
 # environment
 MOTD_SHOWN = update-motd
 # variable set hash-table stats:
-# Load=104/1024=10%, Rehash=0, Collisions=11/206=5%
+# Load=104/1024=10%, Rehash=0, Collisions=11/207=5%
 
 # Pattern-specific Variable Values
 
@@ -228,9 +228,9 @@ MOTD_SHOWN = update-motd
 
 # Directories
 
-# . (device 2064, inode 215116): 15 files, no impossibilities.
+# . (device 2064, inode 215116): 18 files, no impossibilities.
 
-# 15 files, no impossibilities in 1 directories.
+# 18 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -252,41 +252,19 @@ all: build
 #  File has been updated.
 #  Needs to be updated (-q is set).
 # variable set hash-table stats:
-# Load=0/32=0%, Rehash=0, Collisions=0/7=0%
+# Load=0/32=0%, Rehash=0, Collisions=0/8=0%
 
-# 'override' directive
-/home/juozas/code/cluster-config-map/bin: .SHELLSTATUS := 0
 /home/juozas/code/cluster-config-map/bin:
 #  Implicit rule search has not been done.
-#  Implicit/static pattern stem: ''
-#  File does not exist.
+#  Last modified 2022-06-28 16:17:45.61
 #  File has been updated.
-#  Needs to be updated (-q is set).
-# automatic
-# @ := /home/juozas/code/cluster-config-map/bin
-# automatic
-# % := 
-# automatic
-# * := 
-# automatic
-# + := 
-# automatic
-# | := 
-# automatic
-# < := 
-# automatic
-# ^ := 
-# automatic
-# ? := 
-# variable set hash-table stats:
-# Load=9/32=28%, Rehash=0, Collisions=4/16=25%
+#  Successfully updated.
 #  recipe to execute (from 'Makefile', line 108):
 	mkdir -p $(LOCALBIN)
 
 docker-build: test
 #  Phony target (prerequisite of .PHONY).
 #  Implicit rule search has not been done.
- 
 #  File does not exist.
 #  File has not been updated.
 #  recipe to execute (from 'Makefile', line 74):
@@ -305,11 +283,10 @@ docker-build: test
 
 /home/juozas/code/cluster-config-map/bin/controller-gen: /home/juozas/code/cluster-config-map/bin
 #  Implicit rule search has not been done.
-#  File does not exist.
+ 
+#  Last modified 2022-06-28 17:05:38.391175
 #  File has been updated.
-#  Needs to be updated (-q is set).
-# variable set hash-table stats:
-# Load=0/32=0%, Rehash=0, Collisions=0/7=0%
+#  Successfully updated.
 #  recipe to execute (from 'Makefile', line 128):
 	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
 
@@ -324,7 +301,7 @@ uninstall: manifests kustomize
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-06-28 14:32:40.23
+#  Last modified 2022-06-28 16:06:43.82
 #  File has been updated.
 #  Successfully updated.
 
@@ -343,7 +320,7 @@ build: generate fmt vet
 #  File has been updated.
 #  Needs to be updated (-q is set).
 # variable set hash-table stats:
-# Load=0/32=0%, Rehash=0, Collisions=0/7=0%
+# Load=0/32=0%, Rehash=0, Collisions=0/8=0%
 #  recipe to execute (from 'Makefile', line 66):
 	go build -o bin/manager main.go
 
@@ -376,14 +353,33 @@ kustomize: /home/juozas/code/cluster-config-map/bin/kustomize
 #  recipe to execute (from 'Makefile', line 123):
 	curl -s $(KUSTOMIZE_INSTALL_SCRIPT) | bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(LOCALBIN)
 
+# 'override' directive
+generate: .SHELLSTATUS := 0
 generate: controller-gen
 #  Phony target (prerequisite of .PHONY).
 #  Implicit rule search has not been done.
+#  Implicit/static pattern stem: ''
 #  File does not exist.
 #  File has been updated.
 #  Needs to be updated (-q is set).
+# automatic
+# @ := generate
+# automatic
+# % := 
+# automatic
+# * := 
+# automatic
+# + := controller-gen
+# automatic
+# | := 
+# automatic
+# < := controller-gen
+# automatic
+# ^ := controller-gen
+# automatic
+# ? := controller-gen
 # variable set hash-table stats:
-# Load=0/32=0%, Rehash=0, Collisions=0/7=0%
+# Load=9/32=28%, Rehash=0, Collisions=4/17=24%
 #  recipe to execute (from 'Makefile', line 48):
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
@@ -446,9 +442,7 @@ controller-gen: /home/juozas/code/cluster-config-map/bin/controller-gen
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has been updated.
-#  Needs to be updated (-q is set).
-# variable set hash-table stats:
-# Load=0/32=0%, Rehash=0, Collisions=0/7=0%
+#  Successfully updated.
 
 docker-push:
 #  Phony target (prerequisite of .PHONY).
@@ -474,12 +468,12 @@ install: manifests kustomize
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 42 / storage = 519 B / avg = 12 B
-# current buf: size = 8162 B / used = 519 B / count = 42 / avg = 12 B
+# strcache buffers: 1 (0) / strings = 45 / storage = 539 B / avg = 11 B
+# current buf: size = 8162 B / used = 539 B / count = 45 / avg = 11 B
 
-# strcache performance: lookups = 151 / hit rate = 72%
+# strcache performance: lookups = 154 / hit rate = 70%
 # hash-table stats:
-# Load=42/8192=1%, Rehash=0, Collisions=1/151=1%
-# Finished Make data base on Tue Jun 28 15:52:17 2022
+# Load=45/8192=1%, Rehash=0, Collisions=1/154=1%
+# Finished Make data base on Tue Jun 28 17:27:58 2022
 
  

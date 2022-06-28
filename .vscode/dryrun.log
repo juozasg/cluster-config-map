@@ -7,8 +7,8 @@ GOBIN=/home/juozas/code/cluster-config-map/bin go install sigs.k8s.io/controller
  
 /home/juozas/code/cluster-config-map/bin/controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./..."
 go fmt ./...
- 
 go vet ./...
 go build -o bin/manager main.go
+ 
 make: Leaving directory '/home/juozas/code/cluster-config-map'
  
