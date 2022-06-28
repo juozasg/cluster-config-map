@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -30,6 +31,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
+	devhwv1 "github.com/juozasg/cluster-config-map/api/v1"
+	"github.com/juozasg/cluster-config-map/controllers"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -41,10 +45,13 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
+	utilruntime.Must(devhwv1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
 func main() {
+	fmt.Print(ctrl.GetConfigOrDie())
+
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
@@ -85,6 +92,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controllers.ClusterConfigMapReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ClusterConfigMap")
+		os.Exit(1)
+	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

@@ -1,0 +1,6 @@
+apiVersion: devhw.github.com/v1
+kind: ClusterConfigMap
+metadata:
+  name: clusterconfigmap-sample
+spec:
+  # TODO(user): Add fields here

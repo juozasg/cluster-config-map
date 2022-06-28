@@ -3,4 +3,14 @@ layout:
 - go.kubebuilder.io/v3
 projectName: cluster-config-map
 repo: github.com/juozasg/cluster-config-map
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: github.com
+  group: devhw
+  kind: ClusterConfigMap
+  path: github.com/juozasg/cluster-config-map/api/v1
+  version: v1
 version: "3"
