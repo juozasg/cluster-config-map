@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -33,6 +32,27 @@ import (
 type ClusterConfigMapReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+}
+
+func (r *ClusterConfigMapReconciler) ListMatchingNamespaces(ctx context.Context,
+	generateTo devhwv1.GenerateToSpec,
+	namespaces *[]corev1.Namespace) error {
+	log := log.FromContext(ctx)
+
+	for _, selector := range generateTo.NamespaceSelectors {
+		nsFilter := client.MatchingLabels(selector.MatchLabels)
+
+		var nsList corev1.NamespaceList
+
+		if err := r.List(ctx, &nsList, nsFilter); err != nil {
+			log.Error(err, "unable to list namespaces")
+			return err
+		}
+
+		*namespaces = append(*namespaces, nsList.Items...)
+	}
+
+	return nil
 }
 
 //+kubebuilder:rbac:groups=devhw.github.com,resources=clusterconfigmaps,verbs=get;list;watch;create;update;patch;delete
@@ -59,20 +79,12 @@ func (r *ClusterConfigMapReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	selectors := ccm.Spec.GenerateTo.NamespaceSelectors
-	matchLabels0 := selectors[0].MatchLabels
-	nsFilter := client.MatchingLabels(matchLabels0)
-
-	var namespaces corev1.NamespaceList
-
-	if err := r.List(ctx, &namespaces, nsFilter); err != nil {
-		log.Error(err, "unable to list namespaces")
+	var namespaces []corev1.Namespace
+	if err := r.ListMatchingNamespaces(ctx, ccm.Spec.GenerateTo, &namespaces); err != nil {
 		return ctrl.Result{}, err
 	}
 
-	fmt.Println("namespaces", namespaces)
-
-	// get all namespaces matching labels
+	// TODO: create a config map for each namespace
 
 	// get all configmaps owned by this resource
 	// if not in labeled namespaces, delete the config map
