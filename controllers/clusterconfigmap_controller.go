@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"reflect"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -77,20 +78,35 @@ func (r *ClusterConfigMapReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, err
 	}
 
-	// reconcile configmap for each namepace
+	// reconcile ConfigMap for each namepace
 	for _, ns := range namespaces {
 		var configMap corev1.ConfigMap
 		err := r.Get(ctx, types.NamespacedName{Namespace: ns.Name, Name: ccm.Name}, &configMap)
 
-		if err != nil && errors.IsNotFound(err) {
-			log.Info("Creating ConfigMap " + ns.Name + "/" + ccm.Name)
+		if err == nil {
+			// ConfigMap exists. Update data if needed
+			if !reflect.DeepEqual(configMap.Data, ccm.Spec.Data) {
+				configMap.Data = ccm.Spec.Data
+				log.Info("Updating ConfigMap " + configMap.Namespace + "/" + ccm.Name)
+				err = r.Update(ctx, &configMap)
+				if err != nil {
+					return ctrl.Result{}, err
+				}
+			}
+		} else if err != nil && errors.IsNotFound(err) {
+			// ConfigMap does not exist. Create
 			configMap.Namespace = ns.Name
 			configMap.Name = ccm.Name
 			configMap.Data = ccm.Spec.Data
+			log.Info("Creating ConfigMap " + configMap.Namespace + "/" + ccm.Name)
 			err = r.Create(ctx, &configMap)
 			if err != nil {
 				return ctrl.Result{}, err
 			}
+		} else {
+			// give up on other errors
+			return ctrl.Result{}, err
+
 		}
 	}
 
