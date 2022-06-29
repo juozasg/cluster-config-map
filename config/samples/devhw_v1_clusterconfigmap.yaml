@@ -3,5 +3,11 @@ kind: ClusterConfigMap
 metadata:
   name: clusterconfigmap-sample
 spec:
+  data:
+    environment: "blargle"
   generateTo:
-    labelMatch: 'fnargle'
+    namespaceSelectors: 
+      - matchLabels:
+          fnargle: "exists"
+      - matchLabels:
+          blagrle: "yup"

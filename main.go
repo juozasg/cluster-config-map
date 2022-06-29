@@ -18,7 +18,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -50,7 +49,7 @@ func init() {
 }
 
 func main() {
-	fmt.Print(ctrl.GetConfigOrDie())
+	// fmt.Print(ctrl.GetConfigOrDie())
 
 	var metricsAddr string
 	var enableLeaderElection bool

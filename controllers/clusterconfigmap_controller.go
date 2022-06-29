@@ -18,7 +18,9 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -39,7 +41,6 @@ type ClusterConfigMapReconciler struct {
 //+kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch;create;update;patch;delete
 
-
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
@@ -50,9 +51,31 @@ type ClusterConfigMapReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.1/pkg/reconcile
 func (r *ClusterConfigMapReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log := log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	var ccm devhwv1.ClusterConfigMap
+	if err := r.Get(ctx, req.NamespacedName, &ccm); err != nil {
+		log.Error(err, "unable to fetch ClusterConfigMap")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	selectors := ccm.Spec.GenerateTo.NamespaceSelectors
+	matchLabels0 := selectors[0].MatchLabels
+	nsFilter := client.MatchingLabels(matchLabels0)
+
+	var namespaces corev1.NamespaceList
+
+	if err := r.List(ctx, &namespaces, nsFilter); err != nil {
+		log.Error(err, "unable to list namespaces")
+		return ctrl.Result{}, err
+	}
+
+	fmt.Println("namespaces", namespaces)
+
+	// get all namespaces matching labels
+
+	// get all configmaps owned by this resource
+	// if not in labeled namespaces, delete the config map
 
 	return ctrl.Result{}, nil
 }
@@ -62,4 +85,8 @@ func (r *ClusterConfigMapReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&devhwv1.ClusterConfigMap{}).
 		Complete(r)
+
+	// (watch namespaces for creation)
+	//.Watches
+	// https://master.book.kubebuilder.io/reference/watching-resources/externally-managed.html
 }
