@@ -1,7 +1,7 @@
 apiVersion: devhw.github.com/v1
 kind: ClusterConfigMap
 metadata:
-  name: clusterconfigmap-sample
+  name: ccm-test
 spec:
   data:
     environment: "blargle"

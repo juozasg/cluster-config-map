@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	devhwv1 "github.com/juozasg/cluster-config-map/api/v1"
@@ -69,8 +70,13 @@ func (r *ClusterConfigMapReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	var ccm devhwv1.ClusterConfigMap
 	if err := r.Get(ctx, req.NamespacedName, &ccm); err != nil {
-		log.Error(err, "unable to fetch ClusterConfigMap")
-		return ctrl.Result{}, client.IgnoreNotFound(err)
+		if errors.IsNotFound(err) {
+			log.Info(err.Error(), "unable to fetch ClusterConfigMap")
+			return ctrl.Result{}, client.IgnoreNotFound(err)
+		} else {
+			log.Error(err, "unable to fetch ClusterConfigMap")
+			return ctrl.Result{}, err
+		}
 	}
 
 	var namespaces []corev1.Namespace
@@ -98,7 +104,15 @@ func (r *ClusterConfigMapReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			configMap.Namespace = ns.Name
 			configMap.Name = ccm.Name
 			configMap.Data = ccm.Spec.Data
+
 			log.Info("Creating ConfigMap " + configMap.Namespace + "/" + ccm.Name)
+			// set owner ref
+			err = controllerutil.SetOwnerReference(&ccm, &configMap, r.Scheme)
+			if err != nil {
+				log.Error(err, "Failed to set ConfigMap owner reference")
+				return ctrl.Result{}, err
+			}
+
 			err = r.Create(ctx, &configMap)
 			if err != nil {
 				return ctrl.Result{}, err
@@ -120,6 +134,7 @@ func (r *ClusterConfigMapReconciler) Reconcile(ctx context.Context, req ctrl.Req
 func (r *ClusterConfigMapReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&devhwv1.ClusterConfigMap{}).
+		Owns(&corev1.ConfigMap{}).
 		Complete(r)
 
 	// (watch namespaces for creation)

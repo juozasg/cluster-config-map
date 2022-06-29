@@ -43,6 +43,7 @@ type ClusterConfigMapStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:resource:scope=Cluster
 
 // ClusterConfigMap is the Schema for the clusterconfigmaps API
 type ClusterConfigMap struct {
