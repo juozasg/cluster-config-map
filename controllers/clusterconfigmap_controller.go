@@ -76,8 +76,8 @@ func ContainsNamespace(nss []corev1.Namespace, name string) bool {
 
 func IsOwner(owner devhwv1.ClusterConfigMap, cm corev1.ConfigMap) bool {
 	for _, ownerRef := range cm.OwnerReferences {
-		if ownerRef.APIVersion == ownerRef.APIVersion &&
-			ownerRef.Kind == ownerRef.Kind &&
+		if ownerRef.APIVersion == owner.APIVersion &&
+			ownerRef.Kind == owner.Kind &&
 			ownerRef.Name == owner.Name {
 			return true
 		}
