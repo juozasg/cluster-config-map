@@ -49,8 +49,6 @@ func init() {
 }
 
 func main() {
-	// fmt.Print(ctrl.GetConfigOrDie())
-
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
