@@ -25,9 +25,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	devhwv1 "github.com/juozasg/cluster-config-map/api/v1"
 )
@@ -59,11 +64,33 @@ func (r *ClusterConfigMapReconciler) ListMatchingNamespaces(ctx context.Context,
 	return nil
 }
 
+func ContainsNamespace(nss []corev1.Namespace, name string) bool {
+	for _, ns := range nss {
+		if ns.Name == name {
+			return true
+		}
+	}
+
+	return false
+}
+
+func IsOwner(owner devhwv1.ClusterConfigMap, cm corev1.ConfigMap) bool {
+	for _, ownerRef := range cm.OwnerReferences {
+		if ownerRef.APIVersion == ownerRef.APIVersion &&
+			ownerRef.Kind == ownerRef.Kind &&
+			ownerRef.Name == owner.Name {
+			return true
+		}
+	}
+
+	return false
+}
+
 //+kubebuilder:rbac:groups=devhw.github.com,resources=clusterconfigmaps,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=devhw.github.com,resources=clusterconfigmaps/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=devhw.github.com,resources=clusterconfigmaps/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch;
 
 func (r *ClusterConfigMapReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
@@ -71,7 +98,7 @@ func (r *ClusterConfigMapReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	var ccm devhwv1.ClusterConfigMap
 	if err := r.Get(ctx, req.NamespacedName, &ccm); err != nil {
 		if errors.IsNotFound(err) {
-			log.Info(err.Error(), "unable to fetch ClusterConfigMap")
+			log.Info(err.Error())
 			return ctrl.Result{}, client.IgnoreNotFound(err)
 		} else {
 			log.Error(err, "unable to fetch ClusterConfigMap")
@@ -79,13 +106,13 @@ func (r *ClusterConfigMapReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
-	var namespaces []corev1.Namespace
-	if err := r.ListMatchingNamespaces(ctx, ccm.Spec.GenerateTo, &namespaces); err != nil {
+	var matchedNamespaces []corev1.Namespace
+	if err := r.ListMatchingNamespaces(ctx, ccm.Spec.GenerateTo, &matchedNamespaces); err != nil {
 		return ctrl.Result{}, err
 	}
 
 	// reconcile ConfigMap for each namepace
-	for _, ns := range namespaces {
+	for _, ns := range matchedNamespaces {
 		var configMap corev1.ConfigMap
 		err := r.Get(ctx, types.NamespacedName{Namespace: ns.Name, Name: ccm.Name}, &configMap)
 
@@ -120,12 +147,26 @@ func (r *ClusterConfigMapReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		} else {
 			// give up on other errors
 			return ctrl.Result{}, err
-
 		}
 	}
 
-	// get all configmaps owned by this resource
-	// if not in labeled namespaces, delete the config map
+	// TODO: use indexing or selectable labels to optimize this
+	var allConfigMaps corev1.ConfigMapList
+	err := r.List(ctx, &allConfigMaps)
+	if err != nil {
+		log.Error(err, "unable to list ConfigMaps ")
+		return ctrl.Result{}, nil
+	}
+
+	for _, cm := range allConfigMaps.Items {
+		if IsOwner(ccm, cm) && !ContainsNamespace(matchedNamespaces, cm.Namespace) {
+			// cm does not belong to a namespace matching ccm labels
+			// must be deleted
+			log.Info("Deleting ConfigMap " + cm.Namespace + "/" + cm.Name + " (no matching namespaceSelector)")
+			r.Delete(ctx, &cm)
+		}
+
+	}
 
 	return ctrl.Result{}, nil
 }
@@ -135,9 +176,28 @@ func (r *ClusterConfigMapReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&devhwv1.ClusterConfigMap{}).
 		Owns(&corev1.ConfigMap{}).
+		Watches(&source.Kind{Type: &corev1.Namespace{}},
+			handler.EnqueueRequestsFromMapFunc(r.findObjectsForNamespace),
+			builder.WithPredicates(predicate.ResourceVersionChangedPredicate{})).
 		Complete(r)
+}
 
-	// (watch namespaces for creation)
-	//.Watches
-	// https://master.book.kubebuilder.io/reference/watching-resources/externally-managed.html
+func (r *ClusterConfigMapReconciler) findObjectsForNamespace(namespace client.Object) []reconcile.Request {
+	var ccmList devhwv1.ClusterConfigMapList
+
+	if err := r.List(context.TODO(), &ccmList); err != nil {
+		return []reconcile.Request{}
+	}
+
+	requests := make([]reconcile.Request, len(ccmList.Items))
+	for i, item := range ccmList.Items {
+		requests[i] = reconcile.Request{
+			NamespacedName: types.NamespacedName{
+				Name:      item.GetName(),
+				Namespace: item.GetNamespace(),
+			},
+		}
+	}
+
+	return requests
 }

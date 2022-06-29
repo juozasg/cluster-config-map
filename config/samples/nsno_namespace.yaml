@@ -3,4 +3,4 @@ kind: Namespace
 metadata:
   name: nsno
   labels:
-    blagrle: yup
+    app.kubernetes.io/managed-by: "NOT-infra-team"

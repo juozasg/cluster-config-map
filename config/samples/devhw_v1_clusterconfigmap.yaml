@@ -4,10 +4,11 @@ metadata:
   name: ccm-test
 spec:
   data:
-    environment: "blargle"
+    environment: "dev"
+    foo: "blarg"
   generateTo:
     namespaceSelectors: 
       - matchLabels:
-          fnargle: "exists"
+          app.kubernetes.io/managed-by: "dev-team"
       - matchLabels:
-          blagrle: "yup"
+          app.kubernetes.io/managed-by: "infra-team"

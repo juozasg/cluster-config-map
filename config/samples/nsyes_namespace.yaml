@@ -3,4 +3,4 @@ kind: Namespace
 metadata:
   name: nsyes
   labels:
-    fnargle: exists
+    app.kubernetes.io/managed-by: "dev-team"
